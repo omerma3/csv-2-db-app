@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: csv2db_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: csv2db
+      POSTGRES_PASSWORD: csv2db
+      POSTGRES_DB: csv2db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csv2db -d csv2db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

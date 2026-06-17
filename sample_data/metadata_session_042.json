@@ -1,0 +1,18 @@
+{
+    "session_id": "field_session_042",
+    "vehicle_id": "V-PROTO-09",
+    "driver_id": "D-8832",
+    "test_location": "Handling Track A, Proving Grounds",
+    "recording_date": "2026-06-09",
+    "start_time_utc": "2026-06-09T10:00:00Z",
+    "end_time_utc": "2026-06-09T10:01:39Z",
+    "sample_rate_hz": 1,
+    "hardware_version": "v2.1.4",
+    "firmware_version": "fw_beta_0.9",
+    "sensors_active": [
+        "steering_angle_sensor",
+        "obd2_speed",
+        "reverse_state"
+    ],
+    "notes": "Driver reported intermittent static shocks from the steering column during the test. Possible sensor interference expected."
+}
