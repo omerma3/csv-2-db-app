@@ -13,8 +13,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="csv-2-db-app",
-    description="Ingest, clean, and serve vehicle telemetry sessions.",
+    title="Field Test Ingestion & Analytics",
+    description="Ingest, clean, and serve field-test telemetry sessions.",
     version="0.1.0",
     lifespan=lifespan,
 )
