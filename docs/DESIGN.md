@@ -83,6 +83,43 @@ the **2 true outliers**.
 - Schema is created on startup via `Base.metadata.create_all()` (no migration tool
   yet — Alembic is a documented next step).
 
+## Schema handling & extensibility
+
+The expected columns (`timestamp`, `wheel_angle`, `speed`, `reverse_state`) are
+**hard-coded** at every layer — the cleaning functions, the `Sample` ORM model,
+the API schema, and the dashboard. This is a deliberate trade-off
+(**schema-on-write**), not an oversight.
+
+**Consequences for a CSV with different columns:**
+- **Extra** columns (e.g. `gps_lat`) are silently **ignored** — never read or stored.
+- A **renamed/missing** expected column (e.g. `velocity` instead of `speed`) is
+  read as absent → flagged `missing`, stored `NULL`; the real data is dropped.
+
+No crash either way, but unknown columns are lost silently.
+
+**Why static is the right call for this prototype:** a known format lets us apply
+strong typing, domain-specific cleaning (speed outliers, `reverse_state` as bool,
+steering sentinels), a clear API contract, indexed columns, and efficient
+relational queries. For a single documented sensor layout, explicit-and-validated
+beats generic-and-loose.
+
+**Where it breaks down:** fleets add sensors and change formats over time, so a
+static schema means each new channel needs a code change + a DB migration, and
+unknown columns vanish silently. To generalize (in rough order of effort):
+
+1. **Metadata-driven schema** — drive expected columns/types/cleaning rules from
+   per-session-type config (the metadata already declares `sensors_active`),
+   instead of hard-coded literals.
+2. **Hybrid storage** — keep common channels as typed columns, put any extra
+   channels in a GIN-indexed **JSONB** column; absorbs new sensors without a
+   migration.
+3. **Narrow "measurements" table** — `(session_id, timestamp, channel, value,
+   quality_flag)`, one row per reading per channel. Fully generic (any number of
+   channels, zero schema change to add one) and the classic time-series model;
+   trades some type-safety and needs pivoting for analysis.
+4. **Explicit validation, no silent drops** — validate incoming columns against a
+   registered schema and *flag* unknown/missing ones rather than ignoring them.
+
 ## API surface
 
 | Method | Path | Purpose |
