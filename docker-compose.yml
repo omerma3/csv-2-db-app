@@ -8,7 +8,9 @@ services:
       POSTGRES_PASSWORD: csv2db
       POSTGRES_DB: csv2db
     ports:
-      - "5432:5432"
+      # IPv4 loopback only: avoids Docker Desktop's broken IPv6-loopback path on
+      # Windows (so host `localhost` works) and keeps the DB off external ifaces.
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,6 +18,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  backend:
+    build: ./backend
+    container_name: csv2db_backend
+    restart: unless-stopped
+    environment:
+      # Inside the compose network the DB is reachable by the service name `db`.
+      DATABASE_URL: postgresql+psycopg2://csv2db:csv2db@db:5432/csv2db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    container_name: csv2db_frontend
+    restart: unless-stopped
+    environment:
+      # The dashboard calls the API by service name inside the compose network.
+      API_BASE: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8501:8501"
 
 volumes:
   pgdata:

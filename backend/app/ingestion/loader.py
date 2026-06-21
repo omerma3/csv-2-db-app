@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSession
 
 from app import models
-from app.ingestion.cleaning import clean_rows, clean_timestamp
+from app.ingestion.cleaning import clean_rows
 
 
 def parse_metadata(raw_json: str | bytes) -> dict:
@@ -84,7 +84,7 @@ def ingest(
         firmware_version=meta.get("firmware_version"),
         sensors_active=meta.get("sensors_active"),
         notes=meta.get("notes"),
-        ingested_at=clean_timestamp(None) or datetime.now(timezone.utc),
+        ingested_at=datetime.now(timezone.utc),
     )
     db.add(session)
     db.flush()  # assign session.id
